@@ -1,3 +1,4 @@
+import os
 import sys
 import logging
 from pathlib import Path
@@ -8,6 +9,12 @@ from app.config import settings
 logger = logging.getLogger("cloudguard.db")
 
 Base = declarative_base()
+
+def _sqlite_url() -> str:
+    if os.getenv("VERCEL"):
+        return "sqlite:////tmp/cloudguard.db"
+    project_root = Path(__file__).resolve().parent.parent.parent.parent
+    return f"sqlite:///{project_root.as_posix()}/cloudguard.db"
 
 def get_engine():
     db_url = settings.DATABASE_URL
@@ -21,9 +28,7 @@ def get_engine():
             return engine
     except Exception as e:
         logger.warning(f"PostgreSQL connection failed ({e}). Falling back to SQLite for resilient local runtime.")
-        project_root = Path(__file__).resolve().parent.parent.parent.parent
-        sqlite_url = f"sqlite:///{project_root.as_posix()}/cloudguard.db"
-        return create_engine(sqlite_url, connect_args={"check_same_thread": False})
+        return create_engine(_sqlite_url(), connect_args={"check_same_thread": False})
     
     if db_url.startswith("sqlite"):
         return create_engine(db_url, connect_args={"check_same_thread": False})

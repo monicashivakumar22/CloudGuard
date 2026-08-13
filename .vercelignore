@@ -1,0 +1,9 @@
+backend/tests
+backend/.env
+frontend/raw_prototypes
+database
+docs
+render.yaml
+*.db
+.venv
+venv
